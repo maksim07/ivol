@@ -65,9 +65,12 @@ fn d2(bs_params: &BlackScholesParams) -> f64 {
     d1(bs_params) - bs_params.vol * bs_params.time_to_exp.sqrt()
 }
 
+///
+/// Tests
+///
 #[cfg(test)]
 mod test {
-    use crate::black_scholes::BlackScholesParams;
+    use super::BlackScholesParams;
 
     #[test]
     fn test_call_premium() {
