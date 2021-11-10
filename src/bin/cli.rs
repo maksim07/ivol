@@ -2,6 +2,8 @@ use clap::{Arg, App};
 use ivol::black_scholes::{BlackScholesParams, call_premium, put_premium};
 
 fn main() {
+
+    // parsing args
     let matches = App::new("ivol cli")
         .version("0.01")
         .about("Command Line Tool for ivol module functions")
@@ -49,6 +51,7 @@ fn main() {
             .takes_value(true))
         .get_matches();
 
+    // extracting values from args
     let price: f64 = matches.value_of("price").unwrap().parse().unwrap();
     let strike: f64 = matches.value_of("strike").unwrap().parse().unwrap();
     let vol: f64 = matches.value_of("volatility").unwrap().parse().unwrap();
@@ -56,23 +59,18 @@ fn main() {
     let time_to_expiry: f64 = matches.value_of("time_to_expiry").unwrap().parse().unwrap();
     let div_yield: f64 = matches.value_of("div_yield").unwrap().parse().unwrap();
 
-    let call_premium = call_premium(&BlackScholesParams {
+    let bs_params = BlackScholesParams {
         price,
         strike,
         rate,
         div_yield,
         vol,
         time_to_exp: time_to_expiry
-    });
+    };
 
-    let put_premium = put_premium(&BlackScholesParams {
-        price,
-        strike,
-        rate,
-        div_yield,
-        vol,
-        time_to_exp: time_to_expiry
-    });
+    // calculating call and put option premiums
+    let call_premium = call_premium(&bs_params);
+    let put_premium = put_premium(&bs_params);
 
     println!("Option call premium is {} and put premium is {}", &call_premium, &put_premium);
 }
