@@ -37,6 +37,7 @@ pub fn put_premium(bs_params: &BlackScholesParams) -> f64 {
 ///
 /// Generic Black/Scholes calculation for both call and put options
 ///
+#[inline]
 fn generic_bs(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
     let sign = if is_call {1f64} else {-1f64};
     let n: Gaussian = Gaussian::standard();
