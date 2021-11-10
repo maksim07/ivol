@@ -7,3 +7,4 @@ edition = "2018"
 
 [dependencies]
 rv="0.13.1"
+clap="2.33.3"
