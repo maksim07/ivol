@@ -1,5 +1,6 @@
 //! module with BlackScholes implementation
 use rv::prelude::*;
+use std::f64::consts;
 
 ///
 /// Parameters of BlackScholes
@@ -21,17 +22,25 @@ pub struct BlackScholesParams {
 
 
 ///
-/// Method that calculates call option premium using Black/Scholes
+/// Function that calculates call option premium using Black/Scholes
 ///
 pub fn call_premium(bs_params: &BlackScholesParams) -> f64 {
     generic_black_scholes(true, bs_params)
 }
 
 ///
-/// Method that calculates put option premium using Black/Scholes
+/// Function that calculates put option premium using Black/Scholes
 ///
 pub fn put_premium(bs_params: &BlackScholesParams) -> f64 {
     generic_black_scholes(false, bs_params)
+}
+
+///
+/// Function that calculates option's Vega
+///
+pub fn vega(bs_params: &BlackScholesParams) -> f64 {
+    let d1 = d1(bs_params);
+    bs_params.price * (-bs_params.div_yield * bs_params.time_to_expiry).exp() * phi(&d1) * bs_params.time_to_expiry.sqrt()
 }
 
 ///
@@ -47,6 +56,14 @@ fn generic_black_scholes(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
     let dd = (-bs_params.div_yield * bs_params.time_to_expiry).exp();
 
     sign * bs_params.price * n.cdf(&d1) * dd - sign * bs_params.strike * n.cdf(&d2) * d
+}
+
+///
+/// Phi component of Vega
+///
+#[inline]
+fn phi(x: &f64) -> f64 {
+    (-x * x / 2.0).exp() / (2.0 * consts::PI).sqrt()
 }
 
 ///
@@ -118,5 +135,28 @@ mod test {
             time_to_expiry: 0.5
         });
         assert!((cp - 14.95).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_vega() {
+        let mut vega = super::vega(&BlackScholesParams {
+            price: 290f64,
+            div_yield: 0.1,
+            strike: 250f64,
+            vol: 0.15,
+            rate: 0.03,
+            time_to_expiry: 1.0
+        });
+        assert!((vega - 87.554) < 0.001);
+
+        vega = super::vega(&BlackScholesParams {
+            price: 314.0,
+            div_yield: 0.06,
+            strike: 340.0,
+            vol: 0.32,
+            rate: 0.01,
+            time_to_expiry: 1.5
+        });
+        assert!((vega - 137.484) < 0.001);
     }
 }
