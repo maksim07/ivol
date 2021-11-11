@@ -24,21 +24,21 @@ pub struct BlackScholesParams {
 /// Method that calculates call option premium using Black/Scholes
 ///
 pub fn call_premium(bs_params: &BlackScholesParams) -> f64 {
-    generic_bs(true, bs_params)
+    generic_black_scholes(true, bs_params)
 }
 
 ///
 /// Method that calculates put option premium using Black/Scholes
 ///
 pub fn put_premium(bs_params: &BlackScholesParams) -> f64 {
-    generic_bs(false, bs_params)
+    generic_black_scholes(false, bs_params)
 }
 
 ///
 /// Generic Black/Scholes calculation for both call and put options
 ///
 #[inline]
-fn generic_bs(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
+fn generic_black_scholes(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
     let sign = if is_call {1f64} else {-1f64};
     let n: Gaussian = Gaussian::standard();
     let d1 = sign * d1(bs_params);
