@@ -16,7 +16,7 @@ pub struct BlackScholesParams {
     /// risk free rate
     pub rate: f64,
     /// time to expiry in years (decimal)
-    pub time_to_exp: f64
+    pub time_to_expiry: f64
 }
 
 
@@ -43,8 +43,8 @@ fn generic_black_scholes(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
     let n: Gaussian = Gaussian::standard();
     let d1 = sign * d1(bs_params);
     let d2 = sign * d2(bs_params);
-    let d = (-bs_params.rate * bs_params.time_to_exp).exp();
-    let dd = (-bs_params.div_yield * bs_params.time_to_exp).exp();
+    let d = (-bs_params.rate * bs_params.time_to_expiry).exp();
+    let dd = (-bs_params.div_yield * bs_params.time_to_expiry).exp();
 
     sign * bs_params.price * n.cdf(&d1) * dd - sign * bs_params.strike * n.cdf(&d2) * d
 }
@@ -55,8 +55,8 @@ fn generic_black_scholes(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
 #[inline]
 fn d1(bs_params: &BlackScholesParams) -> f64 {
     let mut d : f64 = bs_params.price / bs_params.strike;
-    d = d.ln() + (bs_params.rate - bs_params.div_yield + bs_params.vol * bs_params.vol / 2f64) * bs_params.time_to_exp;
-    d / (bs_params.vol * bs_params.time_to_exp.sqrt())
+    d = d.ln() + (bs_params.rate - bs_params.div_yield + bs_params.vol * bs_params.vol / 2f64) * bs_params.time_to_expiry;
+    d / (bs_params.vol * bs_params.time_to_expiry.sqrt())
 }
 
 ///
@@ -64,7 +64,7 @@ fn d1(bs_params: &BlackScholesParams) -> f64 {
 ///
 #[inline]
 fn d2(bs_params: &BlackScholesParams) -> f64 {
-    d1(bs_params) - bs_params.vol * bs_params.time_to_exp.sqrt()
+    d1(bs_params) - bs_params.vol * bs_params.time_to_expiry.sqrt()
 }
 
 ///
@@ -82,7 +82,7 @@ mod test {
             strike: 110f64,
             vol: 0.12,
             rate: 0.05,
-            time_to_exp: 1.5
+            time_to_expiry: 1.5
         });
         assert!((cp - 4.95).abs() < 0.01);
 
@@ -92,7 +92,7 @@ mod test {
             strike: 110f64,
             vol: 0.12,
             rate: 0.05,
-            time_to_exp: 1.5
+            time_to_expiry: 1.5
         });
         assert!((cp - 4.27).abs() < 0.01);
     }
@@ -105,7 +105,7 @@ mod test {
             strike: 200f64,
             vol: 0.11,
             rate: 0.01,
-            time_to_exp: 1.5
+            time_to_expiry: 1.5
         });
         assert!((cp - 67.92).abs() < 0.01);
 
@@ -115,7 +115,7 @@ mod test {
             strike: 160f64,
             vol: 0.06,
             rate: 0.03,
-            time_to_exp: 0.5
+            time_to_expiry: 0.5
         });
         assert!((cp - 14.95).abs() < 0.01);
     }

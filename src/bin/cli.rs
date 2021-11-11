@@ -65,7 +65,7 @@ fn main() {
         rate,
         div_yield,
         vol,
-        time_to_exp: time_to_expiry
+        time_to_expiry
     };
 
     // calculating call and put option premiums
