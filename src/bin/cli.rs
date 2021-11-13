@@ -3,6 +3,13 @@ use ivol::black_scholes::{BlackScholesParams, call_premium, put_premium, vega};
 
 fn main() {
 
+    let float_validator = |v: String| {
+        match v.parse::<f64>() {
+            Ok(_) => Ok(()),
+            Err(_) => Err("value must be a float number".to_string())
+        }
+    };
+
     // parsing args
     let matches = App::new("ivol cli")
         .version("0.01")
@@ -13,6 +20,7 @@ fn main() {
             .value_name("PRICE")
             .help("option's underlying price")
             .required(true)
+            .validator(float_validator)
             .takes_value(true))
         .arg(Arg::with_name("strike")
             .short("s")
@@ -20,6 +28,7 @@ fn main() {
             .value_name("STRIKE")
             .help("option's strike value")
             .required(true)
+            .validator(float_validator)
             .takes_value(true))
         .arg(Arg::with_name("rate")
             .short("r")
@@ -27,6 +36,7 @@ fn main() {
             .value_name("RATE")
             .help("risk free rate")
             .required(true)
+            .validator(float_validator)
             .takes_value(true))
         .arg(Arg::with_name("div_yield")
             .short("d")
@@ -34,6 +44,7 @@ fn main() {
             .value_name("DIV")
             .help("annual dividend yield")
             .default_value("0")
+            .validator(float_validator)
             .takes_value(true))
         .arg(Arg::with_name("time_to_expiry")
             .short("t")
@@ -41,6 +52,7 @@ fn main() {
             .value_name("TIME")
             .help("time to expiry in years")
             .default_value("1")
+            .validator(float_validator)
             .takes_value(true))
         .arg(Arg::with_name("volatility")
             .short("v")
@@ -48,6 +60,7 @@ fn main() {
             .value_name("VOL")
             .help("volatility in percent (decimal)")
             .required(true)
+            .validator(float_validator)
             .takes_value(true))
         .get_matches();
 
