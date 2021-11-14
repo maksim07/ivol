@@ -3,6 +3,7 @@ use ivol::black_scholes::{BlackScholesParams, call_premium, put_premium, vega};
 
 fn main() {
 
+    // float values validator
     let float_validator = |v: String| {
         match v.parse::<f64>() {
             Ok(_) => Ok(()),
