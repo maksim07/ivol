@@ -48,7 +48,7 @@ pub fn vega(bs_params: &BlackScholesParams) -> f64 {
 ///
 #[inline]
 fn generic_black_scholes(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
-    let sign = if is_call {1f64} else {-1f64};
+    let sign = if is_call {1.0} else {-1.0};
     let n: Gaussian = Gaussian::standard();
     let d1 = sign * d1(bs_params);
     let d2 = sign * d2(bs_params);
@@ -72,7 +72,7 @@ fn phi(x: &f64) -> f64 {
 #[inline]
 fn d1(bs_params: &BlackScholesParams) -> f64 {
     let mut d : f64 = bs_params.price / bs_params.strike;
-    d = d.ln() + (bs_params.rate - bs_params.div_yield + bs_params.vol * bs_params.vol / 2f64) * bs_params.time_to_expiry;
+    d = d.ln() + (bs_params.rate - bs_params.div_yield + bs_params.vol * bs_params.vol / 2.0) * bs_params.time_to_expiry;
     d / (bs_params.vol * bs_params.time_to_expiry.sqrt())
 }
 
