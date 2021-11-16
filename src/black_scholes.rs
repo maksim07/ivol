@@ -1,7 +1,6 @@
 //! module with BlackScholes implementation
 use rv::prelude::*;
 
-///
 /// Parameters of BlackScholes
 ///
 pub struct BlackScholesParams {
@@ -20,35 +19,30 @@ pub struct BlackScholesParams {
 }
 
 
-///
 /// Function that calculates call option premium using Black/Scholes
 ///
 pub fn call_premium(bs_params: &BlackScholesParams) -> f64 {
     generic_black_scholes(true, bs_params)
 }
 
-///
 /// Function that calculates put option premium using Black/Scholes
 ///
 pub fn put_premium(bs_params: &BlackScholesParams) -> f64 {
     generic_black_scholes(false, bs_params)
 }
 
-///
 /// Delta sensitivity for call options
 ///
 pub fn call_delta(bs_params: &BlackScholesParams) -> f64 {
     generic_delta(true, bs_params)
 }
 
-///
 /// Delta sensitivity for put options
 ///
 pub fn put_delta(bs_params: &BlackScholesParams) -> f64 {
     generic_delta(false, bs_params)
 }
 
-///
 /// Gamma sensitivity for call/put options
 ///
 pub fn gamma(bs_params: &BlackScholesParams) -> f64 {
@@ -58,7 +52,6 @@ pub fn gamma(bs_params: &BlackScholesParams) -> f64 {
     ((-bs_params.div_yield * bs_params.time_to_expiry).exp() / (bs_params.price * bs_params.vol * bs_params.time_to_expiry.sqrt())) * n.pdf(&d1)
 }
 
-///
 /// Delta calculation for both put and calls
 ///
 #[inline]
@@ -69,8 +62,6 @@ fn generic_delta(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
     sign * (-bs_params.div_yield * bs_params.time_to_expiry).exp() * n.cdf(&(sign * d1))
 }
 
-
-///
 /// Function that calculates option's Vega
 ///
 pub fn vega(bs_params: &BlackScholesParams) -> f64 {
@@ -79,7 +70,6 @@ pub fn vega(bs_params: &BlackScholesParams) -> f64 {
     0.01 * bs_params.price * (-bs_params.div_yield * bs_params.time_to_expiry).exp() * n.pdf(&d1) * bs_params.time_to_expiry.sqrt()
 }
 
-///
 /// Generic Black/Scholes calculation for both call and put options
 ///
 #[inline]
@@ -94,7 +84,6 @@ fn generic_black_scholes(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
     sign * bs_params.price * n.cdf(&d1) * dd - sign * bs_params.strike * n.cdf(&d2) * d
 }
 
-///
 /// D1 sub-formula of Black/Scholes
 ///
 #[inline]
@@ -104,7 +93,6 @@ fn d1(bs_params: &BlackScholesParams) -> f64 {
     d / (bs_params.vol * bs_params.time_to_expiry.sqrt())
 }
 
-///
 /// D2 sub-formula of Black/Scholes
 ///
 #[inline]
