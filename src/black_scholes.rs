@@ -49,6 +49,16 @@ pub fn put_delta(bs_params: &BlackScholesParams) -> f64 {
 }
 
 ///
+/// Gamma sensitivity for call/put options
+///
+pub fn gamma(bs_params: &BlackScholesParams) -> f64 {
+    let n: Gaussian = Gaussian::standard();
+    let d1 = d1(bs_params);
+
+    ((-bs_params.div_yield * bs_params.time_to_expiry).exp() / (bs_params.price * bs_params.vol * bs_params.time_to_expiry.sqrt())) * n.pdf(&d1)
+}
+
+///
 /// Delta calculation for both put and calls
 ///
 #[inline]

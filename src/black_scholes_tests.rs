@@ -68,6 +68,21 @@ fn test_delta() {
 }
 
 #[test]
+fn test_gamma() {
+    let bs_params = BlackScholesParams {
+        price: 4801.0,
+        div_yield: 0.03,
+        strike: 4900.0,
+        vol: 0.2,
+        rate: 0.02,
+        time_to_expiry: 0.01
+    };
+
+    let gamma = black_scholes::gamma(&bs_params);
+    assert!((gamma - 0.002).abs() < 0.001);
+}
+
+#[test]
 fn test_vega() {
     let bs_params = BlackScholesParams {
         price: 290.0,
