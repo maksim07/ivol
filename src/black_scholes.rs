@@ -40,7 +40,7 @@ pub fn put_premium(bs_params: &BlackScholesParams) -> f64 {
 pub fn vega(bs_params: &BlackScholesParams) -> f64 {
     let n: Gaussian = Gaussian::standard();
     let d1 = d1(bs_params);
-    0.01 * bs_params.price * (-bs_params.rate * bs_params.time_to_expiry).exp() * n.pdf(&d1) * bs_params.time_to_expiry.sqrt()
+    0.01 * bs_params.price * (-bs_params.div_yield * bs_params.time_to_expiry).exp() * n.pdf(&d1) * bs_params.time_to_expiry.sqrt()
 }
 
 ///
@@ -131,24 +131,25 @@ mod test {
 
     #[test]
     fn test_vega() {
-        let mut vega = super::vega(&BlackScholesParams {
-            price: 290f64,
+        let bs_params = BlackScholesParams {
+            price: 290.0,
             div_yield: 0.1,
             strike: 250f64,
             vol: 0.15,
             rate: 0.03,
             time_to_expiry: 1.0
-        });
-        assert!((vega - 87.554) < 0.001);
+        };
 
-        vega = super::vega(&BlackScholesParams {
-            price: 314.0,
-            div_yield: 0.06,
-            strike: 340.0,
-            vol: 0.32,
-            rate: 0.01,
-            time_to_expiry: 1.5
-        });
-        assert!((vega - 137.484) < 0.001);
+        let call_prem = super::call_premium(&bs_params);
+        let vega = super::vega(&bs_params);
+        assert!((vega - 0.93902) < 0.001);
+
+        let bs_params_bumped = BlackScholesParams{
+            vol: bs_params.vol + 0.01,
+            ..bs_params
+        };
+        let call_prem_bumped = super::call_premium(&bs_params_bumped);
+        assert!((call_prem + vega - call_prem_bumped).abs() < 0.01);
+
     }
 }
