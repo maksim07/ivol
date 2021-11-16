@@ -52,6 +52,27 @@ pub fn gamma(bs_params: &BlackScholesParams) -> f64 {
     ((-bs_params.div_yield * bs_params.time_to_expiry).exp() / (bs_params.price * bs_params.vol * bs_params.time_to_expiry.sqrt())) * n.pdf(&d1)
 }
 
+/// Rho sensitivity for call options
+///
+pub fn call_rho(bs_params: &BlackScholesParams) -> f64 {
+    generic_rho(true, bs_params)
+}
+
+/// Rho sensitivity for put options
+///
+pub fn put_rho(bs_params: &BlackScholesParams) -> f64 {
+    generic_rho(false, bs_params)
+}
+
+/// Generic function for calculating Rho
+///
+fn generic_rho(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
+    let sign = if is_call {1.0} else {-1.0};
+    let n: Gaussian = Gaussian::standard();
+    let cdf_arg = sign * d2(bs_params);
+    0.01 * sign * bs_params.strike * (-bs_params.rate * bs_params.time_to_expiry).exp() * bs_params.time_to_expiry * n.cdf(&cdf_arg)
+}
+
 /// Delta calculation for both put and calls
 ///
 #[inline]

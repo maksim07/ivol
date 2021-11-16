@@ -83,6 +83,26 @@ fn test_gamma() {
 }
 
 #[test]
+fn test_rho() {
+    let bs_params = BlackScholesParams {
+        price: 873.0,
+        div_yield: 0.01,
+        strike: 950.0,
+        vol: 0.4,
+        rate: 0.08,
+        time_to_expiry: 1.0
+    };
+
+    let call_premium = black_scholes::call_premium(&bs_params);
+    let rho = black_scholes::call_rho(&bs_params);
+    assert!((rho - 3.56567).abs() < 0.001);
+
+    let bs_params2 = BlackScholesParams{rate: bs_params.rate + 0.01, .. bs_params};
+    let call_premium2 = black_scholes::call_premium(&bs_params2);
+    assert!((call_premium2 - call_premium - rho).abs() < 0.1);
+}
+
+#[test]
 fn test_vega() {
     let bs_params = BlackScholesParams {
         price: 290.0,
