@@ -35,6 +35,32 @@ pub fn put_premium(bs_params: &BlackScholesParams) -> f64 {
 }
 
 ///
+/// Delta sensitivity for call options
+///
+pub fn call_delta(bs_params: &BlackScholesParams) -> f64 {
+    generic_delta(true, bs_params)
+}
+
+///
+/// Delta sensitivity for put options
+///
+pub fn put_delta(bs_params: &BlackScholesParams) -> f64 {
+    generic_delta(false, bs_params)
+}
+
+///
+/// Delta calculation for both put and calls
+///
+#[inline]
+fn generic_delta(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
+    let sign = if is_call {1.0} else {-1.0};
+    let n: Gaussian = Gaussian::standard();
+    let d1 = d1(bs_params);
+    sign * (-bs_params.div_yield * bs_params.time_to_expiry).exp() * n.cdf(&(sign * d1))
+}
+
+
+///
 /// Function that calculates option's Vega
 ///
 pub fn vega(bs_params: &BlackScholesParams) -> f64 {
@@ -76,80 +102,4 @@ fn d2(bs_params: &BlackScholesParams) -> f64 {
     d1(bs_params) - bs_params.vol * bs_params.time_to_expiry.sqrt()
 }
 
-///
-/// Tests
-///
-#[cfg(test)]
-mod test {
-    use super::BlackScholesParams;
 
-    #[test]
-    fn test_call_premium() {
-        let mut cp = super::call_premium(&BlackScholesParams {
-            price: 100f64,
-            div_yield: 0f64,
-            strike: 110f64,
-            vol: 0.12,
-            rate: 0.05,
-            time_to_expiry: 1.5
-        });
-        assert!((cp - 4.95).abs() < 0.01);
-
-        cp = super::call_premium(&BlackScholesParams {
-            price: 100f64,
-            div_yield: 0.01,
-            strike: 110f64,
-            vol: 0.12,
-            rate: 0.05,
-            time_to_expiry: 1.5
-        });
-        assert!((cp - 4.27).abs() < 0.01);
-    }
-
-    #[test]
-    fn test_put_premium() {
-        let mut cp = super::put_premium(&BlackScholesParams {
-            price: 150f64,
-            div_yield: 0.1,
-            strike: 200f64,
-            vol: 0.11,
-            rate: 0.01,
-            time_to_expiry: 1.5
-        });
-        assert!((cp - 67.92).abs() < 0.01);
-
-        cp = super::put_premium(&BlackScholesParams {
-            price: 150f64,
-            div_yield: 0.1,
-            strike: 160f64,
-            vol: 0.06,
-            rate: 0.03,
-            time_to_expiry: 0.5
-        });
-        assert!((cp - 14.95).abs() < 0.01);
-    }
-
-    #[test]
-    fn test_vega() {
-        let bs_params = BlackScholesParams {
-            price: 290.0,
-            div_yield: 0.1,
-            strike: 250f64,
-            vol: 0.15,
-            rate: 0.03,
-            time_to_expiry: 1.0
-        };
-
-        let call_prem = super::call_premium(&bs_params);
-        let vega = super::vega(&bs_params);
-        assert!((vega - 0.93902) < 0.001);
-
-        let bs_params_bumped = BlackScholesParams{
-            vol: bs_params.vol + 0.01,
-            ..bs_params
-        };
-        let call_prem_bumped = super::call_premium(&bs_params_bumped);
-        assert!((call_prem + vega - call_prem_bumped).abs() < 0.01);
-
-    }
-}

@@ -1,5 +1,5 @@
 use clap::{Arg, App};
-use ivol::black_scholes::{BlackScholesParams, call_premium, put_premium, vega};
+use ivol::black_scholes::*;
 
 fn main() {
 
@@ -85,7 +85,12 @@ fn main() {
     // calculating call and put option premiums
     let call_premium = call_premium(&bs_params);
     let put_premium = put_premium(&bs_params);
+    let call_delta = call_delta(&bs_params);
+    let put_delta = put_delta(&bs_params);
     let vega = vega(&bs_params);
 
-    println!("Option call premium is {} and put premium is {} with vega of {}", &call_premium, &put_premium, &vega);
+    println!("Option call premium is {} and put premium is {} with the greeks:\n    \
+              Call Delta = {}\n    \
+              Put Delta = {}\n    \
+              Vega = {}", &call_premium, &put_premium, &call_delta, &put_delta, &vega);
 }
