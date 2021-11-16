@@ -1,6 +1,5 @@
 //! module with BlackScholes implementation
 use rv::prelude::*;
-use std::f64::consts;
 
 ///
 /// Parameters of BlackScholes
@@ -39,8 +38,9 @@ pub fn put_premium(bs_params: &BlackScholesParams) -> f64 {
 /// Function that calculates option's Vega
 ///
 pub fn vega(bs_params: &BlackScholesParams) -> f64 {
+    let n: Gaussian = Gaussian::standard();
     let d1 = d1(bs_params);
-    bs_params.price * (-bs_params.div_yield * bs_params.time_to_expiry).exp() * phi(&d1) * bs_params.time_to_expiry.sqrt()
+    0.01 * bs_params.price * (-bs_params.rate * bs_params.time_to_expiry).exp() * n.pdf(&d1) * bs_params.time_to_expiry.sqrt()
 }
 
 ///
@@ -56,14 +56,6 @@ fn generic_black_scholes(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
     let dd = (-bs_params.div_yield * bs_params.time_to_expiry).exp();
 
     sign * bs_params.price * n.cdf(&d1) * dd - sign * bs_params.strike * n.cdf(&d2) * d
-}
-
-///
-/// Phi component of Vega
-///
-#[inline]
-fn phi(x: &f64) -> f64 {
-    (-x * x / 2.0).exp() / (2.0 * consts::PI).sqrt()
 }
 
 ///
