@@ -89,6 +89,10 @@ fn main() {
     let put_delta = put_delta(&bs_params);
     let call_rho = call_rho(&bs_params);
     let put_rho = put_rho(&bs_params);
+    let call_theta = call_theta(&bs_params);
+    let put_theta = put_theta(&bs_params);
+    let call_phi = call_phi(&bs_params);
+    let put_phi = put_phi(&bs_params);
     let gamma = gamma(&bs_params);
     let vega = vega(&bs_params);
 
@@ -98,5 +102,10 @@ fn main() {
               Gamma = {}\n    \
               Call Rho = {}\n    \
               Put Rho = {}\n    \
-              Vega = {}", &call_premium, &put_premium, &call_delta, &put_delta, &gamma, &call_rho, &put_rho, &vega);
+              Call Phi = {}\n    \
+              Put Phi = {}\n    \
+              Call Theta = {}\n    \
+              Put Theta = {}\n    \
+              Vega = {}", &call_premium, &put_premium, &call_delta, &put_delta,
+             &gamma, &call_rho, &call_phi, &put_phi, &call_theta, &put_theta, &put_rho, &vega);
 }
