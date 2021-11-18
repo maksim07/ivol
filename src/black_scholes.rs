@@ -49,7 +49,7 @@ pub fn put_premium(bs_params: &BlackScholesParams) -> f64 {
 /// assert!((delta - real_call_delta).abs() < 0.0001);
 /// ```
 ///
-/// The `delta` value in the example should be roughly the same as call Delta sensitivity.
+/// The `delta` value in the example should be roughly the same as call's Delta sensitivity.
 pub fn simulate_call<F>(source: &BlackScholesParams, bump: F) -> f64
     where F: Fn(&BlackScholesParams) -> BlackScholesParams {
     let call_prem = call_premium(source);
