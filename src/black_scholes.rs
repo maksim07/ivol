@@ -41,12 +41,12 @@ pub fn put_premium(bs_params: &BlackScholesParams) -> f64 {
 /// ```
 /// use ivol::black_scholes::*;
 ///
-/// const EPS: f64 = 0.0001;
+/// const SMALL_BUMP: f64 = 0.00001;
 /// let bs_params = BlackScholesParams{price: 345.0, strike: 330.0, div_yield: 0.06, rate: 0.025, vol: 0.34, time_to_expiry: 1.0};
 ///
-/// let delta = simulate_call(&bs_params, |c| {BlackScholesParams{price: c.price + EPS, ..*c}}) / EPS;
+/// let delta = simulate_call(&bs_params, |c| {BlackScholesParams{price: c.price + SMALL_BUMP, ..*c}}) / SMALL_BUMP;
 /// let real_call_delta = call_delta(&bs_params);
-/// assert!((delta - real_call_delta).abs() < EPS);
+/// assert!((delta - real_call_delta).abs() < 0.0001);
 /// ```
 ///
 /// The `delta` value in the example should be roughly the same as call Delta sensitivity.
