@@ -143,3 +143,25 @@ fn test_theta() {
     let diff = simulate_call(&bs_params, |c| BlackScholesParams {time_to_expiry: c.time_to_expiry - BUMP, ..*c}) / BUMP;
     assert!((diff - theta).abs() < EPS);
 }
+
+#[test]
+fn test_phi() {
+    let bs_params = BlackScholesParams {
+        price: 604.0,
+        div_yield: 0.07,
+        strike: 620.0,
+        vol: 0.3,
+        rate: 0.02,
+        time_to_expiry: 1.0
+    };
+
+    let bump = |c: &BlackScholesParams| BlackScholesParams{div_yield: c.div_yield + BUMP, ..*c};
+
+    let call_phi = black_scholes::call_phi(&bs_params);
+    let call_diff = simulate_call(&bs_params, bump) / BUMP / 100.0;
+    assert!((call_phi - call_diff).abs() < EPS);
+
+    let put_phi = black_scholes::put_phi(&bs_params);
+    let put_diff = simulate_put(&bs_params, bump) / BUMP / 100.0;
+    assert!((put_phi - put_diff).abs() < EPS)
+}

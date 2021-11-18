@@ -111,9 +111,31 @@ pub fn put_theta(bs_params: &BlackScholesParams) -> f64 {
     generic_theta(false, bs_params)
 }
 
+/// Phi (dividend yield risk) calculation for call options
+///
+pub fn call_phi(bs_params: &BlackScholesParams) -> f64 {
+    generic_phi(true, bs_params)
+}
+
+/// Phi (dividend yield risk) calculation for put options
+///
+pub fn put_phi(bs_params: &BlackScholesParams) -> f64 {
+    generic_phi(false, bs_params)
+}
+
+/// Generic function for phi (dividend yield risk) sensitivity calculation for options
+///
+fn generic_phi(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
+    let n: Gaussian = Gaussian::standard();
+    let sign = if is_call {1.0} else {-1.0};
+    let dprice = bs_params.price * (-bs_params.div_yield * bs_params.time_to_expiry).exp();
+    let d1 = sign * d1(bs_params);
+    -sign * bs_params.time_to_expiry * dprice * n.cdf(&d1) * 0.01
+}
 
 /// Generic theta calculation function
 ///
+#[inline]
 fn generic_theta(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
     let n: Gaussian = Gaussian::standard();
     let sign = if is_call {1.0} else {-1.0};
