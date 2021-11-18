@@ -1,6 +1,11 @@
 #![cfg(test)]
 use crate::black_scholes;
-use crate::black_scholes::BlackScholesParams;
+use crate::black_scholes::{BlackScholesParams, simulate_put};
+use crate::black_scholes::simulate_call;
+
+const BUMP: f64 = 0.00001;
+const EPS: f64 = 0.0001;
+
 
 #[test]
 fn test_call_premium() {
@@ -62,9 +67,13 @@ fn test_delta() {
     let delta = black_scholes::call_delta(&bs_params);
     assert!((delta - 0.528).abs() < 0.01);
 
-    let call_premium1 = black_scholes::call_premium(&bs_params);
-    let call_premium2 = black_scholes::call_premium(&BlackScholesParams{price: bs_params.price + 1.0, ..bs_params});
-    assert!((call_premium2 - call_premium1 - delta).abs() < 0.01)
+    let bump = |c: &BlackScholesParams| {BlackScholesParams{price: c.price + BUMP, ..*c}};
+    let diff = simulate_call(&bs_params, bump) / BUMP;
+    assert!((diff - delta).abs() < EPS);
+
+    let pdelta = black_scholes::put_delta(&bs_params);
+    let pdiff = simulate_put(&bs_params, bump) / BUMP;
+    assert!((pdiff - pdelta).abs() < EPS);
 }
 
 #[test]
@@ -93,13 +102,11 @@ fn test_rho() {
         time_to_expiry: 1.0
     };
 
-    let call_premium = black_scholes::call_premium(&bs_params);
     let rho = black_scholes::call_rho(&bs_params);
     assert!((rho - 3.56567).abs() < 0.001);
 
-    let bs_params2 = BlackScholesParams{rate: bs_params.rate + 0.01, .. bs_params};
-    let call_premium2 = black_scholes::call_premium(&bs_params2);
-    assert!((call_premium2 - call_premium - rho).abs() < 0.1);
+    let diff = simulate_call(&bs_params, |c| {BlackScholesParams{rate: c.rate + BUMP, ..*c}}) / BUMP / 100.0;
+    assert!((diff - rho).abs() < EPS);
 }
 
 #[test]
@@ -113,15 +120,9 @@ fn test_vega() {
         time_to_expiry: 1.0
     };
 
-    let call_prem = black_scholes::call_premium(&bs_params);
     let vega = black_scholes::vega(&bs_params);
     assert!((vega - 0.93902) < 0.001);
 
-    let bs_params_bumped = BlackScholesParams{
-        vol: bs_params.vol + 0.01,
-        ..bs_params
-    };
-    let call_prem_bumped = black_scholes::call_premium(&bs_params_bumped);
-    assert!((call_prem + vega - call_prem_bumped).abs() < 0.01);
-
+    let diff = simulate_call(&bs_params, |c| {BlackScholesParams{vol: c.vol + BUMP, ..*c}}) / BUMP / 100.0;
+    assert!((diff - vega).abs() < EPS);
 }

@@ -31,6 +31,43 @@ pub fn put_premium(bs_params: &BlackScholesParams) -> f64 {
     generic_black_scholes(false, bs_params)
 }
 
+/// Gives premium change for the call option simulation
+///
+/// * source - original contract
+/// * bump - contract simulation function that creates new contract out of original
+///
+/// # Example
+///
+/// ```
+/// use ivol::black_scholes::*;
+///
+/// const EPS: f64 = 0.0001;
+/// let bs_params = BlackScholesParams{price: 345.0, strike: 330.0, div_yield: 0.06, rate: 0.025, vol: 0.34, time_to_expiry: 1.0};
+///
+/// let delta = simulate_call(&bs_params, |c| {BlackScholesParams{price: c.price + EPS, ..*c}}) / EPS;
+/// let real_call_delta = call_delta(&bs_params);
+/// assert!((delta - real_call_delta).abs() < EPS);
+/// ```
+///
+/// The `delta` value in the example should be roughly the same as call Delta sensitivity.
+pub fn simulate_call<F>(source: &BlackScholesParams, bump: F) -> f64
+    where F: Fn(&BlackScholesParams) -> BlackScholesParams {
+    let call_prem = call_premium(source);
+    let new_call = bump(source);
+    let call_prem_bumped = call_premium(&new_call);
+    call_prem_bumped - call_prem
+}
+
+/// Same as [`simulate_call`] but for put options
+pub fn simulate_put<F>(source: &BlackScholesParams, bump: F) -> f64
+    where F: Fn(&BlackScholesParams) -> BlackScholesParams {
+    let put_prem = put_premium(source);
+    let new_put = bump(source);
+    let put_prem_bumped = put_premium(&new_put);
+    put_prem_bumped - put_prem
+}
+
+
 /// Delta sensitivity for call options
 ///
 pub fn call_delta(bs_params: &BlackScholesParams) -> f64 {
