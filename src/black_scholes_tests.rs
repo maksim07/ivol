@@ -6,7 +6,6 @@ use crate::black_scholes::simulate_call;
 const BUMP: f64 = 0.00001;
 const EPS: f64 = 0.0001;
 
-
 #[test]
 fn test_call_premium() {
     let mut cp = black_scholes::call_premium(&BlackScholesParams {
@@ -125,4 +124,22 @@ fn test_vega() {
 
     let diff = simulate_call(&bs_params, |c| {BlackScholesParams{vol: c.vol + BUMP, ..*c}}) / BUMP / 100.0;
     assert!((diff - vega).abs() < EPS);
+}
+
+#[test]
+fn test_theta() {
+    let bs_params = BlackScholesParams {
+        price: 104.0,
+        div_yield: 0.03,
+        strike: 95.0,
+        vol: 0.43,
+        rate: 0.02,
+        time_to_expiry: 1.0
+    };
+
+    let theta = black_scholes::call_theta(&bs_params);
+    assert!((theta + 6.908).abs() < 0.001);
+
+    let diff = simulate_call(&bs_params, |c| BlackScholesParams {time_to_expiry: c.time_to_expiry - BUMP, ..*c}) / BUMP;
+    assert!((diff - theta).abs() < EPS);
 }

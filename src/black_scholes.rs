@@ -101,8 +101,34 @@ pub fn put_rho(bs_params: &BlackScholesParams) -> f64 {
     generic_rho(false, bs_params)
 }
 
+/// Theta sensitivity for call options
+pub fn call_theta(bs_params: &BlackScholesParams) -> f64 {
+    generic_theta(true, bs_params)
+}
+
+/// Theta sensitivity for put options
+pub fn put_theta(bs_params: &BlackScholesParams) -> f64 {
+    generic_theta(false, bs_params)
+}
+
+
+/// Generic theta calculation function
+///
+fn generic_theta(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
+    let n: Gaussian = Gaussian::standard();
+    let sign = if is_call {1.0} else {-1.0};
+    let dprice =  bs_params.price * (-bs_params.div_yield * bs_params.time_to_expiry).exp();
+    let dstrike =  bs_params.strike * (-bs_params.rate * bs_params.time_to_expiry).exp();
+    let d1 = d1(bs_params);
+    let d2 = d2(bs_params);
+    let v = bs_params.vol / (2.0 * bs_params.time_to_expiry.sqrt());
+
+    sign * bs_params.div_yield * dprice * n.cdf(&(sign * d1)) - sign * bs_params.rate * dstrike * n.cdf(&(sign * d2)) - dprice * v * n.pdf(&d1)
+}
+
 /// Generic function for calculating Rho
 ///
+#[inline]
 fn generic_rho(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
     let sign = if is_call {1.0} else {-1.0};
     let n: Gaussian = Gaussian::standard();
@@ -157,5 +183,4 @@ fn d1(bs_params: &BlackScholesParams) -> f64 {
 fn d2(bs_params: &BlackScholesParams) -> f64 {
     d1(bs_params) - bs_params.vol * bs_params.time_to_expiry.sqrt()
 }
-
 
