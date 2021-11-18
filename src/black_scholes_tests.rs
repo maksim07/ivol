@@ -165,3 +165,19 @@ fn test_phi() {
     let put_diff = simulate_put(&bs_params, bump) / BUMP / 100.0;
     assert!((put_phi - put_diff).abs() < EPS)
 }
+
+#[test]
+fn test_call_impl_vol() {
+    let bs_params = BlackScholesParams {
+        price: 78.0,
+        div_yield: 0.03,
+        strike: 70.0,
+        vol: 0.3,
+        rate: 0.04,
+        time_to_expiry: 1.0
+    };
+
+    let call_prem = black_scholes::call_premium(&bs_params);
+    let iv = black_scholes::call_impl_vol(&call_prem, &bs_params);
+    assert!((iv - bs_params.vol).abs() < 0.000001);
+}

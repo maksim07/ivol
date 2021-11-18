@@ -1,5 +1,10 @@
 //! module with BlackScholes implementation
+use std::f64::consts::PI;
 use rv::prelude::*;
+use nrfind::*;
+
+const EPS : f64 = 0.0000001;
+const ITER: i32 = 60000;
 
 /// Parameters of BlackScholes
 ///
@@ -123,8 +128,50 @@ pub fn put_phi(bs_params: &BlackScholesParams) -> f64 {
     generic_phi(false, bs_params)
 }
 
+/// Function that calculates option's Vega
+///
+pub fn vega(bs_params: &BlackScholesParams) -> f64 {
+    0.01 * dtv_dvol(bs_params)
+}
+
+
+pub fn call_impl_vol(call_market_price: &f64, bs_params: &BlackScholesParams) -> f64 {
+    let func = |v: f64| call_premium(&BlackScholesParams{vol: v, ..*bs_params}) - *call_market_price;
+    let vol_deriv = |v: f64| dtv_dvol(&BlackScholesParams{vol: v, ..*bs_params});
+    let vol_guess = approx_vol(call_market_price, bs_params);
+    find_root(&func, &vol_deriv, vol_guess, EPS, ITER).unwrap()
+}
+
+/// Calculates approximate volatility based on price, strike, rate and time to maturity (Corrado and Miller).
+/// This is initial value for Newton-Raphson method.
+fn approx_vol(market_price: &f64, bs_params: &BlackScholesParams) -> f64 {
+    let dprice = bs_params.price * (-bs_params.div_yield * bs_params.time_to_expiry).exp();
+    let dstrike = bs_params.strike * (-bs_params.rate * bs_params.time_to_expiry).exp();
+    let psdiff = dprice - dstrike;
+    let mdiff = market_price - psdiff / 2.0;
+    let under_root = mdiff.powi(2) - psdiff.powi(2) / PI;
+    let root = if under_root > 0.0 {under_root.sqrt()} else {0.0};
+    let sum = (2.0 * PI).sqrt() / (dprice + dstrike) * (mdiff + root);
+
+    sum / bs_params.time_to_expiry.sqrt()
+}
+
+#[test]
+fn test_appox_vol() {
+    let bs_params = BlackScholesParams {
+        price: 200.0, strike: 180.0, vol: 0.34, div_yield: 0.05, rate: 0.08, time_to_expiry: 0.5
+    };
+
+    let premium = call_premium(&bs_params);
+    let bumped_premium = premium * 1.05;
+
+    let vol_approx = approx_vol(&bumped_premium, &bs_params);
+    assert!((vol_approx - 0.34).abs() < 0.1);
+}
+
 /// Generic function for phi (dividend yield risk) sensitivity calculation for options
 ///
+#[inline]
 fn generic_phi(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
     let n: Gaussian = Gaussian::standard();
     let sign = if is_call {1.0} else {-1.0};
@@ -168,12 +215,14 @@ fn generic_delta(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
     sign * (-bs_params.div_yield * bs_params.time_to_expiry).exp() * n.cdf(&(sign * d1))
 }
 
-/// Function that calculates option's Vega
+
+/// BlackScholes derivative for volatility
 ///
-pub fn vega(bs_params: &BlackScholesParams) -> f64 {
+#[inline]
+fn dtv_dvol(bs_params: &BlackScholesParams) -> f64 {
     let n: Gaussian = Gaussian::standard();
     let d1 = d1(bs_params);
-    0.01 * bs_params.price * (-bs_params.div_yield * bs_params.time_to_expiry).exp() * n.pdf(&d1) * bs_params.time_to_expiry.sqrt()
+    bs_params.price * (-bs_params.div_yield * bs_params.time_to_expiry).exp() * n.pdf(&d1) * bs_params.time_to_expiry.sqrt()
 }
 
 /// Generic Black/Scholes calculation for both call and put options
@@ -205,4 +254,3 @@ fn d1(bs_params: &BlackScholesParams) -> f64 {
 fn d2(bs_params: &BlackScholesParams) -> f64 {
     d1(bs_params) - bs_params.vol * bs_params.time_to_expiry.sqrt()
 }
-
