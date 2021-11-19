@@ -11,5 +11,3 @@ rv="0.13.1"
 nrfind = "1.0.3"
 clap="2.33.3"
 
-[badges]
-travis-ci = {repository = "/maksim07/ivol"}
