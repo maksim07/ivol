@@ -1,5 +1,6 @@
-iVol
+ivol
 =========
 
-> iVol is a library for calculating market volatility.
+> **ivol** is a library for calculating implied volatility.
+
 

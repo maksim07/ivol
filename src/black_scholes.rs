@@ -1,9 +1,54 @@
-//! module with BlackScholes implementation
+//! module with Black/Scholes formula implementation and implied volatility calculation.
+//! Includes calculation of european option's greeks.
+//!
+//! # Examples
+//!
+//! ```
+//! use ivol::black_scholes::*;
+//!
+//! let bs_params = BlackScholesParams {
+//!     price: 4792.0,
+//!     strike: 4400.0,
+//!     rate: 0.025,
+//!     time_to_expiry: 0.5,
+//!     vol: 0.23,
+//!     div_yield: 0.04
+//! };
+//!
+//! // call/put premium
+//! let call_premium = call_premium(&bs_params);
+//! let put_premium = put_premium(&bs_params);
+//!
+//! // greeks
+//! let call_delta = call_delta(&bs_params);
+//! let put_delta = put_delta(&bs_params);
+//! let vega = vega(&bs_params);
+//! let put_rho = put_rho(&bs_params);
+//! let call_rho = call_rho(&bs_params);
+//! let call_theta = call_theta(&bs_params);
+//! let put_theta = put_theta(&bs_params);
+//! let gamma = gamma(&bs_params);
+//!
+//! // dividend risk greeks
+//! let call_phi = call_phi(&bs_params);
+//! let put_phi = put_phi(&bs_params);
+//!
+//!
+//! // let's calculate implied volatility from call option price
+//! let iv = call_impl_vol(&call_premium, &bs_params);
+//! assert!((iv - bs_params.vol).abs() < 0.0000001);
+//!
+//! // ... and from put price
+//! let iv2 = put_impl_vol(&put_premium, &bs_params);
+//! assert!((iv2 - bs_params.vol).abs() < 0.0000001);
+//! ```
 use std::f64::consts::PI;
 use rv::prelude::*;
 use nrfind::*;
 
+/// Precision for Newton-Raphson method
 const EPS : f64 = 0.0000001;
+/// Maximum number of iterations for Newton-Raphson method
 const ITER: i32 = 60000;
 
 /// Parameters of BlackScholes
@@ -199,7 +244,7 @@ fn generic_phi(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
 
 /// Black/Scholes derivative with respect to divs
 ///
-fn dtv_ddiv(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
+pub fn dtv_ddiv(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
     let n: Gaussian = Gaussian::standard();
     let sign = if is_call {1.0} else {-1.0};
     let dprice = bs_params.price * (-bs_params.div_yield * bs_params.time_to_expiry).exp();
@@ -232,7 +277,7 @@ fn generic_rho(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
 /// Black/Scholes derivative with respect to interest rate
 ///
 #[inline]
-fn dtv_drate(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
+pub fn dtv_drate(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
     let sign = if is_call {1.0} else {-1.0};
     let n: Gaussian = Gaussian::standard();
     let cdf_arg = sign * d2(bs_params);
@@ -253,7 +298,7 @@ fn generic_delta(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
 /// BlackScholes derivative for volatility
 ///
 #[inline]
-fn dtv_dvol(bs_params: &BlackScholesParams) -> f64 {
+pub fn dtv_dvol(bs_params: &BlackScholesParams) -> f64 {
     let n: Gaussian = Gaussian::standard();
     let d1 = d1(bs_params);
     bs_params.price * (-bs_params.div_yield * bs_params.time_to_expiry).exp() * n.pdf(&d1) * bs_params.time_to_expiry.sqrt()
