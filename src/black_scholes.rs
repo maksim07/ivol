@@ -36,6 +36,15 @@ pub fn put_premium(bs_params: &BlackScholesParams) -> f64 {
     generic_black_scholes(false, bs_params)
 }
 
+/// Returns call or put price based on put/call price using put/call parity formula
+///
+pub fn callput_price(is_call_price: bool, market_price: &f64, bs_params: &BlackScholesParams) -> f64 {
+    let sign = if is_call_price {1.0} else {-1.0};
+    let dprice = bs_params.price * (-bs_params.div_yield * bs_params.time_to_expiry).exp();
+    let dstrike = bs_params.strike * (-bs_params.rate * bs_params.time_to_expiry).exp();
+    market_price - sign * (dprice - dstrike)
+}
+
 /// Gives premium change for the call option simulation
 ///
 /// * source - original contract
@@ -134,13 +143,25 @@ pub fn vega(bs_params: &BlackScholesParams) -> f64 {
     0.01 * dtv_dvol(bs_params)
 }
 
-
+/// Calculates implied volatility from call market price and other option parameters
+///
 pub fn call_impl_vol(call_market_price: &f64, bs_params: &BlackScholesParams) -> f64 {
     let func = |v: f64| call_premium(&BlackScholesParams{vol: v, ..*bs_params}) - *call_market_price;
     let vol_deriv = |v: f64| dtv_dvol(&BlackScholesParams{vol: v, ..*bs_params});
     let vol_guess = approx_vol(call_market_price, bs_params);
     find_root(&func, &vol_deriv, vol_guess, EPS, ITER).unwrap()
 }
+
+/// Calculates implied volatility from put market price and other option parameters
+///
+pub fn put_impl_vol(put_market_price: &f64, bs_params: &BlackScholesParams) -> f64 {
+    let func = |v: f64| put_premium(&BlackScholesParams { vol: v, ..*bs_params }) - *put_market_price;
+    let vol_deriv = |v: f64| dtv_dvol(&BlackScholesParams { vol: v, ..*bs_params });
+    let call_market_price = callput_price(false, put_market_price, bs_params);
+    let vol_guess = approx_vol(&call_market_price, bs_params);
+    find_root(&func, &vol_deriv, vol_guess, EPS, ITER).unwrap()
+}
+
 
 /// Calculates approximate volatility based on price, strike, rate and time to maturity (Corrado and Miller).
 /// This is initial value for Newton-Raphson method.
@@ -173,11 +194,17 @@ fn test_appox_vol() {
 ///
 #[inline]
 fn generic_phi(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
+    0.01 * dtv_ddiv(is_call, bs_params)
+}
+
+/// Black/Scholes derivative with respect to divs
+///
+fn dtv_ddiv(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
     let n: Gaussian = Gaussian::standard();
     let sign = if is_call {1.0} else {-1.0};
     let dprice = bs_params.price * (-bs_params.div_yield * bs_params.time_to_expiry).exp();
     let d1 = sign * d1(bs_params);
-    -sign * bs_params.time_to_expiry * dprice * n.cdf(&d1) * 0.01
+    -sign * bs_params.time_to_expiry * dprice * n.cdf(&d1)
 }
 
 /// Generic theta calculation function
@@ -199,10 +226,17 @@ fn generic_theta(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
 ///
 #[inline]
 fn generic_rho(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
+    0.01 * dtv_drate(is_call, bs_params)
+}
+
+/// Black/Scholes derivative with respect to interest rate
+///
+#[inline]
+fn dtv_drate(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
     let sign = if is_call {1.0} else {-1.0};
     let n: Gaussian = Gaussian::standard();
     let cdf_arg = sign * d2(bs_params);
-    0.01 * sign * bs_params.strike * (-bs_params.rate * bs_params.time_to_expiry).exp() * bs_params.time_to_expiry * n.cdf(&cdf_arg)
+    sign * bs_params.strike * (-bs_params.rate * bs_params.time_to_expiry).exp() * bs_params.time_to_expiry * n.cdf(&cdf_arg)
 }
 
 /// Delta calculation for both put and calls

@@ -180,4 +180,8 @@ fn test_call_impl_vol() {
     let call_prem = black_scholes::call_premium(&bs_params);
     let iv = black_scholes::call_impl_vol(&call_prem, &bs_params);
     assert!((iv - bs_params.vol).abs() < 0.000001);
+
+    let put_prem = black_scholes::put_premium(&bs_params);
+    let iv2 = black_scholes::put_impl_vol(&put_prem, &bs_params);
+    assert!((iv2 - iv).abs() < 0.000001)
 }
