@@ -2,6 +2,7 @@
 name = "ivol"
 version = "0.0.1"
 edition = "2018"
+repository = "https://github.com/maksim07/ivol"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -9,3 +10,6 @@ edition = "2018"
 rv="0.13.1"
 nrfind = "1.0.3"
 clap="2.33.3"
+
+[badges]
+travis-ci = {repository = "/maksim07/ivol"}
