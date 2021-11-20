@@ -3,7 +3,7 @@ name = "ivol"
 version = "0.0.2"
 edition = "2018"
 repository = "https://github.com/maksim07/ivol"
-
+license = "Apache-2.0"
 
 [dependencies]
 rv="0.13.1"
