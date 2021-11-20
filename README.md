@@ -39,10 +39,10 @@ let put_phi = put_phi(&bs_params);
 
 
 // let's calculate implied volatility from call option price
-let iv = call_impl_vol(&call_premium, &bs_params);
+let iv = call_impl_vol(&call_premium, &bs_params).unwrap();
 assert!((iv - bs_params.vol).abs() < 0.0000001);
 
 // ... and from put price
-let iv2 = put_impl_vol(&put_premium, &bs_params);
+let iv2 = put_impl_vol(&put_premium, &bs_params).unwrap();
 assert!((iv2 - bs_params.vol).abs() < 0.0000001);
 ```
