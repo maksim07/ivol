@@ -1,5 +1,6 @@
 //! > Crate contains some financial API, which includes Black/Scholes formula, implied volatility calculation, european option sensitivities.
 //!
+//! [![Tests status](https://github.com/maksim07/ivol/workflows/Rust/badge.svg?event=push)](https://github.com/maksim07/ivol/actions/workflows/rust.yml)
 //! [![Build Status](https://app.travis-ci.com/maksim07/ivol.svg?branch=master)](https://app.travis-ci.com/maksim07/ivol)
 //!
 //! # Examples
@@ -36,11 +37,11 @@
 //!
 //!
 //! // let's calculate implied volatility from call option price
-//! let iv = call_impl_vol(&call_premium, &bs_params);
+//! let iv = call_impl_vol(&call_premium, &bs_params).unwrap();
 //! assert!((iv - bs_params.vol).abs() < 0.0000001);
 //!
 //! // ... and from put price
-//! let iv2 = put_impl_vol(&put_premium, &bs_params);
+//! let iv2 = put_impl_vol(&put_premium, &bs_params).unwrap();
 //! assert!((iv2 - bs_params.vol).abs() < 0.0000001);
 //! ```
 

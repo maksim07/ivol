@@ -10,6 +10,7 @@ const ITER: i32 = 60000;
 
 /// Parameters of BlackScholes
 ///
+#[derive(Debug)]
 pub struct BlackScholesParams {
     /// spot price of option underlying asset
     pub price: f64,
@@ -147,23 +148,34 @@ pub fn vega(bs_params: &BlackScholesParams) -> f64 {
 
 /// Calculates implied volatility from call market price and other option parameters
 ///
-pub fn call_impl_vol(call_market_price: &f64, bs_params: &BlackScholesParams) -> f64 {
+pub fn call_impl_vol(call_market_price: &f64, bs_params: &BlackScholesParams) -> Result<f64, f64> {
     let func = |v: f64| call_premium(&BlackScholesParams{vol: v, ..*bs_params}) - *call_market_price;
     let vol_deriv = |v: f64| dtv_dvol(&BlackScholesParams{vol: v, ..*bs_params});
     let vol_guess = approx_vol(call_market_price, bs_params);
-    find_root(&func, &vol_deriv, vol_guess, EPS, ITER).unwrap()
+    let root = find_root(&func, &vol_deriv, vol_guess, EPS, ITER);
+    process_impl_vol_result(root, &vol_guess)
 }
 
 /// Calculates implied volatility from put market price and other option parameters
 ///
-pub fn put_impl_vol(put_market_price: &f64, bs_params: &BlackScholesParams) -> f64 {
+pub fn put_impl_vol(put_market_price: &f64, bs_params: &BlackScholesParams) -> Result<f64,f64> {
     let func = |v: f64| put_premium(&BlackScholesParams { vol: v, ..*bs_params }) - *put_market_price;
     let vol_deriv = |v: f64| dtv_dvol(&BlackScholesParams { vol: v, ..*bs_params });
     let call_market_price = callput_price(false, put_market_price, bs_params);
     let vol_guess = approx_vol(&call_market_price, bs_params);
-    find_root(&func, &vol_deriv, vol_guess, EPS, ITER).unwrap()
+    let root = find_root(&func, &vol_deriv, vol_guess, EPS, ITER);
+    process_impl_vol_result(root, &vol_guess)
 }
 
+#[inline]
+fn process_impl_vol_result(r: Result<f64, f64>, vol_guess: &f64) -> Result<f64, f64> {
+    match r {
+        Ok(v) => Ok(v),
+        Err(e) => {
+            if e.is_normal() {Err(e)} else {Err(*vol_guess)}
+        }
+    }
+}
 
 /// Calculates approximate volatility based on price, strike, rate and time to maturity (Corrado and Miller).
 /// This is initial value for Newton-Raphson method.
@@ -258,6 +270,9 @@ fn generic_delta(is_call: bool, bs_params: &BlackScholesParams) -> f64 {
 pub fn dtv_dvol(bs_params: &BlackScholesParams) -> f64 {
     let n: Gaussian = Gaussian::standard();
     let d1 = d1(bs_params);
+    if !d1.is_normal() {
+        println!("Not normal d1 {:?}", bs_params);
+    }
     bs_params.price * (-bs_params.div_yield * bs_params.time_to_expiry).exp() * n.pdf(&d1) * bs_params.time_to_expiry.sqrt()
 }
 

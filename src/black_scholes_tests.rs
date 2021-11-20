@@ -1,4 +1,5 @@
 #![cfg(test)]
+use rand::prelude::*;
 use crate::black_scholes;
 use crate::black_scholes::{BlackScholesParams, simulate_put};
 use crate::black_scholes::simulate_call;
@@ -178,10 +179,55 @@ fn test_call_impl_vol() {
     };
 
     let call_prem = black_scholes::call_premium(&bs_params);
-    let iv = black_scholes::call_impl_vol(&call_prem, &bs_params);
-    assert!((iv - bs_params.vol).abs() < 0.000001);
+    let iv = match black_scholes::call_impl_vol(&call_prem, &bs_params) {
+        Ok(v) => v,
+        Err(e) => e
+    };
+    assert!((iv - bs_params.vol).abs() < 0.0001);
 
     let put_prem = black_scholes::put_premium(&bs_params);
-    let iv2 = black_scholes::put_impl_vol(&put_prem, &bs_params);
-    assert!((iv2 - iv).abs() < 0.000001)
+    let iv2 = match black_scholes::put_impl_vol(&put_prem, &bs_params) {
+        Ok(v) => v,
+        Err(e) => e
+    };
+    assert!((iv2 - iv).abs() < 0.0001)
+}
+
+/// Test that generates random BlackScholes params and test implied vol
+#[test]
+fn test_call_impl_vol_rnd_params() {
+    let mut rng: ThreadRng = ThreadRng::default();
+
+    // generate 100k different parameters and test implied vol calculation
+    for _ in 0..100000 {
+        let bs_params = generate_rand_bs_params(&mut rng);
+        // println!("Running IV test for {:?}", &bs_params);
+
+        let call_prem = black_scholes::call_premium(&bs_params);
+        match black_scholes::call_impl_vol(&call_prem, &bs_params) {
+            Ok (iv) => assert!((iv - bs_params.vol).abs() < 0.1),
+            Err(eiv) => {
+                if eiv.is_normal() {
+                    assert!((eiv - bs_params.vol).abs() < 0.01)
+                }
+                else {
+                    panic!("Test failed with {:?}", &bs_params);
+                }
+            }
+        }
+
+    }
+}
+
+/// generates random params for BlackScholes
+fn generate_rand_bs_params(rng: &mut ThreadRng) -> BlackScholesParams {
+    let price: f64 = rng.gen_range(0.0..15000.0);
+    let strike = rng.gen_range(0.8..1.2) * price;
+
+    let div_yield = rng.gen_range(0.0..0.15);
+    let rate = rng.gen_range(0.0..0.2);
+    let time_to_expiry = rng.gen_range(0.3..5.0);
+    let vol = rng.gen_range(0.1..0.5);
+
+    BlackScholesParams { price, strike, rate, div_yield, time_to_expiry, vol }
 }
